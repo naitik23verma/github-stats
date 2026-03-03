@@ -1,28 +1,39 @@
 name: Generate Top Languages
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:    # run manually
   schedule:
-    - cron: '0 */12 * * *'  # Every 12 hours
+    - cron: "0 */12 * * *"
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Generate GitHub Languages
-        uses: github-linguist/linguist-action@v1
-        with:
-          repository: naitik23verma
-          output: generated/languages.svg
+      - name: Install Linguist
+        run: sudo apt-get update && sudo apt-get install -y ruby-full
 
-      - name: Commit and push changes
+      - name: Run Linguist to detect languages
+        run: |
+          gem install github-linguist
+          linguist --json . > languages.json
+          cat languages.json
+
+      - name: Convert JSON → SVG
+        run: |
+          mkdir -p generated
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'>" > generated/languages.svg
+          echo "<text x='10' y='20'>Top Languages:</text>" >> generated/languages.svg
+          cat languages.json >> generated/languages.svg
+          echo "</svg>" >> generated/languages.svg
+
+      - name: Commit SVG
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add .
+          git add generated/languages.svg
           git commit -m "Updated languages.svg" || echo "No changes to commit"
           git push
