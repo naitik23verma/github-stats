@@ -1,0 +1,28 @@
+name: Generate Top Languages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */12 * * *'  # Every 12 hours
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Generate GitHub Languages
+        uses: github-linguist/linguist-action@v1
+        with:
+          repository: naitik23verma
+          output: generated/languages.svg
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "Updated languages.svg" || echo "No changes to commit"
+          git push
